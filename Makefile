@@ -4,10 +4,10 @@ CFLAGS=-Wall
 all: binsearch datagen
 
 datagen: datagen.c 
-	$(CC) -o datagen datagen.c $(CFLAGS)
+	$(CC) -o datagen datagen.c -lm $(CFLAGS)
 
 binsearch: binsearch.c util.o
-	$(CC) -o binsearch binsearch.c util.o $(CFLAGS)
+	$(CC) -o binsearch binsearch.c util.o -lm $(CFLAGS)
 
 util.o:
 	$(CC) -c -o util.o util.c $(CFLAGS)

@@ -9,39 +9,46 @@
 #include "types.h"
 #include "const.h"
 
-int cmpfunc (const void * a, const void * b) {
-    const unsigned int ua = *(const unsigned int*) a;
-    const unsigned int ub = *(const unsigned int*) b;
+int cmpfunc(const void *a, const void *b)
+{
+    const unsigned int ua = *(const unsigned int *)a;
+    const unsigned int ub = *(const unsigned int *)b;
 
-    if (ua == ub) {
+    if (ua == ub)
+    {
         return 0;
     }
-    else if (ua < ub){
+    else if (ua < ub)
+    {
         return -1;
     }
-    else {
+    else
+    {
         return 1;
     }
 }
 
-UINT* generate_values(UINT T, bool sorted) {
+UINT *generate_values(UINT T, bool sorted)
+{
     size_t size = pow(10, T);
-    UINT* valuebuff = malloc(sizeof(UINT) * size);
+    UINT *valuebuff = malloc(sizeof(UINT) * size);
 
-    FILE* rand = fopen("/dev/urandom", "r");
+    FILE *rand = fopen("/dev/urandom", "r");
 
     size_t numvalues = 0;
     size_t remaining_values = size;
 
-    while (numvalues < size) {
-        size_t bread = fread(valuebuff+numvalues, sizeof(UINT), min(remaining_values, 1000), rand);
+    while (numvalues < size)
+    {
+        size_t bread = fread(valuebuff + numvalues, sizeof(UINT), min(remaining_values, 1000), rand);
         numvalues += bread;
         remaining_values -= bread;
     }
 
     fclose(rand);
 
-    if (sorted) {
+    if (sorted)
+    {
         printf("[datagen] sorting values.\n");
         qsort(valuebuff, size, sizeof(UINT), cmpfunc);
     }
@@ -49,53 +56,62 @@ UINT* generate_values(UINT T, bool sorted) {
     return valuebuff;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
     struct sockaddr_un addr;
     char buf[100];
-    int fd,cl,rc;
+    int fd, cl, rc;
 
-    if ( (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+    {
         perror("[datagen] Error creating socket.\n");
         exit(-1);
     }
-
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
 
-    strncpy(addr.sun_path, DSOCKET_PATH, sizeof(addr.sun_path)-1);
+    strncpy(addr.sun_path, DSOCKET_PATH, sizeof(addr.sun_path) - 1);
     unlink(DSOCKET_PATH);
 
-    if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+    {
         perror("[datagen] Bind error.\n");
         exit(-1);
     }
 
-    if (listen(fd, 5) == -1) {
+    if (listen(fd, 5) == -1)
+    {
         perror("[datagen] Error listening for incoming connections.\n");
         exit(-1);
     }
 
-    while (1) {
-        if ( (cl = accept(fd, NULL, NULL)) == -1) {
+    while (1)
+    {
+        if ((cl = accept(fd, NULL, NULL)) < 0)
+        {
             perror("[datagen] Error accepting incomming connection.\n");
             continue;
         }
+        while ((rc = read(cl, buf, sizeof(buf))) > 0)
+        {
 
-        while ( (rc=read(cl,buf,sizeof(buf))) > 0) {
             char cmd[6], sflag;
             int tvalue;
-            int toks = sscanf(buf, DATAGEN_BEGIN_CMD_FMT, cmd, &sflag, &tvalue);
-
-            if (toks == 3 && strstr(cmd, "BEGIN") != NULL) {
+            int toks = sscanf(buf, "%s %c%d", cmd, &sflag, &tvalue);
+            fprintf(stderr, "%s", buf);
+            fprintf(stderr, "%s %s %d %d", cmd, &sflag, tvalue, toks);
+            if (toks == 3 && strstr(cmd, "BEGIN") != NULL)
+            {
                 printf("[datagen] Beginning value generation.\n");
                 bool sorted = sflag == 'S';
 
-                if (tvalue < 3 || tvalue > 8) {
+                if (tvalue < 3 || tvalue > 8)
+                {
                     perror("[datagen] Invalid T value! Aborting.\n");
                     continue;
                 }
 
-                UINT* pvalues = generate_values(tvalue, sorted);
+                UINT *pvalues = generate_values(tvalue, sorted);
 
                 printf("[datagen] post value generation and sorting.\n");
 
@@ -106,8 +122,9 @@ int main(int argc, char** argv) {
 
                 printf("[datagen] wrote OK response to socket.\n");
 
-                while (remaining_values > 0) {
-                    size_t bwritten = write(cl, pvalues+numvalues, min(remaining_values, 1000) * sizeof(UINT));
+                while (remaining_values > 0)
+                {
+                    size_t bwritten = write(cl, pvalues + numvalues, min(remaining_values, 1000) * sizeof(UINT));
                     size_t vwritten = bwritten / sizeof(UINT);
                     numvalues += vwritten;
                     remaining_values -= vwritten;
@@ -117,19 +134,23 @@ int main(int argc, char** argv) {
 
                 free(pvalues);
             }
-            else if (strstr(cmd, DATAGEN_END_CMD) != NULL) {
+            else if (strstr(cmd, DATAGEN_END_CMD) != NULL)
+            {
                 printf("[datagen] Now exiting.\n");
                 exit(0);
             }
-            else {
+            else
+            {
                 perror("[datagen] Command not understood!\n");
             }
         }
-        if (rc == -1) {
+        if (rc == -1)
+        {
             perror("[datagen] error reading.\n");
             exit(-1);
         }
-        else if (rc == 0) {
+        else if (rc == 0)
+        {
             continue;
         }
     }

@@ -3,6 +3,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <sys/un.h>
 #include <stdbool.h>
 #include <string.h>
@@ -12,16 +13,19 @@
 #include "util.h"
 
 // TODO: implement
-int serial_binsearch() {
+int serial_binsearch()
+{
     return 0;
 }
 
 // TODO: implement
-int parallel_binsearch() {
+int parallel_binsearch()
+{
     return 0;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
     /* TODO: move this time measurement to right before the execution of each binsearch algorithms
      * in your experiment code. It now stands here just for demonstrating time measurement. */
     clock_t cbegin = clock();
@@ -35,7 +39,22 @@ int main(int argc, char** argv) {
     /* TODO: parse arguments with getopt */
 
     /* TODO: start datagen here as a child process. */
-
+    pid_t i = fork();
+    if (i == 0)
+    {
+        if (execv("./datagen", argv) < 0)
+        {
+            printf("Doesnt works");
+        }
+    }
+    else if (i > 0)
+    {
+    }
+    else
+    {
+        perror("fork failed");
+        exit(3);
+    }
     /* TODO: implement code for your experiments using data provided by datagen and your
      * serial and parallel versions of binsearch.
      * */
@@ -47,11 +66,46 @@ int main(int argc, char** argv) {
      * experiments
      * */
 
+    struct sockaddr_un addr;
+    char buf[100];
+    int fd, rc;
+
+    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+    {
+        perror("socket error");
+        exit(-1);
+    }
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, DSOCKET_PATH, sizeof(addr.sun_path));
+    int re = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
+    while (re == -1)
+    {
+        re = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
+    }
+
+    char *arr = {"BEGIN S5"};
+    write(fd, arr, sizeof(arr));
+
+    while ((rc = read(STDIN_FILENO, buf, sizeof(buf))) > 0)
+    {
+        if (write(fd, buf, rc) != rc)
+        {
+            if (rc > 0)
+                fprintf(stderr, "partial write");
+            else
+            {
+                perror("write error");
+                exit(-1);
+            }
+        }
+    }
+
     /* Probe time elapsed. */
     clock_t cend = clock();
 
     // Time elapsed in miliseconds.
-    double time_elapsed = ((double) (cend - cbegin) / CLOCKS_PER_SEC) * 1000;
+    double time_elapsed = ((double)(cend - cbegin) / CLOCKS_PER_SEC) * 1000;
 
     printf("Time elapsed '%lf' [ms].\n", time_elapsed);
 
