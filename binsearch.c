@@ -8,14 +8,27 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <getopt.h>
 #include "types.h"
 #include "const.h"
 #include "util.h"
 
 // TODO: implement
-int serial_binsearch()
-{
-    return 0;
+int serial_binsearch(int arr[], int l, int r, int x) 
+{ 
+   if (r >= l) 
+   { 
+        int mid = l + (r - l)/2; 
+  
+        if (arr[mid] == x)   
+            return mid; 
+  
+        if (arr[mid] > x)  
+            return serial_binsearch(arr, l, mid-1, x); 
+
+        return serial_binsearch(arr, mid+1, r, x); 
+   } 
+    return -1;
 }
 
 // TODO: implement
@@ -36,7 +49,29 @@ int main(int argc, char **argv)
     printf("[binsearch] Number of cores available: '%ld'\n",
            sysconf(_SC_NPROCESSORS_ONLN));
 
+    int size = -1, experiments = -1, position = -1;
+    int option = 0;
+     size = size*experiments*position;
     /* TODO: parse arguments with getopt */
+    while ((option = getopt(argc, argv,"T:E:P:")) != -1) {
+        switch (option) {
+            case 'T' : 
+                
+                experiments = atoi(optarg);
+                break;
+            case 'E' : 
+                
+                size = atoi(optarg); 
+                break;
+            case 'P' : 
+                
+                position = atoi(optarg);
+                break;
+            default: 
+                printf("Parameters wrong");
+                exit(1);
+        }
+    }
 
     /* TODO: start datagen here as a child process. */
     pid_t i = fork();
@@ -45,6 +80,7 @@ int main(int argc, char **argv)
         if (execv("./datagen", argv) < 0)
         {
             printf("Doesnt works");
+            exit(1);
         }
     }
     else if (i > 0)
