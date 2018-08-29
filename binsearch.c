@@ -166,9 +166,10 @@ int main(int argc, char **argv)
 
     char *arr = {"BEGIN S5"};
     write(fd, arr, sizeof(arr));
-
+    fprintf(stderr, "hola\n" );
     while ((rc = read(STDIN_FILENO, buf, sizeof(buf))) > 0)
     {
+        fprintf(stderr, "hola\n" );
         if (write(fd, buf, rc) != rc)
         {
             if (rc > 0)
@@ -179,9 +180,18 @@ int main(int argc, char **argv)
                 exit(-1);
             }
         }
-    }
 
-    
+    }
+    fprintf(stderr, "hola\n" );
+    int ret;
+    char buf1[1000];
+    while ((ret = read(fd, buf1, sizeof(buf1))) > 0) {
+        if (ret > 0)
+        {
+            printf("%s\n",buf1 );
+        }
+        
+    }
 
      for (int i = 0; i < max_threads; i++)
         pthread_create(&m_tid[i], NULL, parallel_binsearch, (void*)NULL);
