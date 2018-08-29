@@ -9,9 +9,21 @@
 #include <string.h>
 #include <time.h>
 #include <getopt.h>
+#include <pthread.h>
 #include "types.h"
 #include "const.h"
 #include "util.h"
+
+
+int arr[10]; 
+bool fnd = false;
+int found;
+int max;
+int min;
+int xx;
+int n = sizeof(arr); 
+int max_threads;
+int c = 0;
 
 // TODO: implement
 int serial_binsearch(int arr[], int l, int r, int x) 
@@ -31,17 +43,45 @@ int serial_binsearch(int arr[], int l, int r, int x)
     return -1;
 }
 
+
+
 // TODO: implement
-int parallel_binsearch()
+void* parallel_binsearch(void* arg)
 {
-    return 0;
+    c++;
+    int c_parts = n/max_threads;
+    min = (c-1)*c_parts;
+    max = c*c_parts;
+    while (max >= min && !fnd) 
+   { 
+        int mid = min + (max - min)/2; 
+  
+        if (arr[mid] == xx) {
+            found = arr[mid];
+            fnd = true; 
+            break;
+        }      
+  
+        if (arr[mid] > xx){
+            max = mid -1;
+        } 
+        else{
+            min = mid +1;
+        }
+    }
+    return NULL;
 }
+
 
 int main(int argc, char **argv)
 {
     /* TODO: move this time measurement to right before the execution of each binsearch algorithms
      * in your experiment code. It now stands here just for demonstrating time measurement. */
     clock_t cbegin = clock();
+    int max_threads = sysconf(_SC_NPROCESSORS_ONLN);
+    pthread_t m_tid[max_threads];
+
+   
 
     printf("[binsearch] Starting up...\n");
 
@@ -73,6 +113,8 @@ int main(int argc, char **argv)
         }
     }
 
+
+
     /* TODO: start datagen here as a child process. */
     pid_t i = fork();
     if (i == 0)
@@ -93,7 +135,9 @@ int main(int argc, char **argv)
     }
     /* TODO: implement code for your experiments using data provided by datagen and your
      * serial and parallel versions of binsearch.
-     * */
+     * ocupar read del socket para el arreglo del binsearch
+     */
+    
 
     /* TODO: connect to datagen and ask for the necessary data in each experiment round.
      * Create a Unix domain socket with DSOCKET_PATH (see const.h).
@@ -136,6 +180,21 @@ int main(int argc, char **argv)
             }
         }
     }
+
+    
+
+     for (int i = 0; i < max_threads; i++)
+        pthread_create(&m_tid[i], NULL, parallel_binsearch, (void*)NULL);
+
+    for (int i = 0; i < max_threads; i++)
+        pthread_detach(m_tid[i]);
+    if (fnd) {
+        printf("se encontro %d \n", found);
+    }
+    else {
+        printf("no se encontro %d \n", xx);
+    }
+    //serial_binsearch();
 
     /* Probe time elapsed. */
     clock_t cend = clock();
