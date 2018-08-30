@@ -188,10 +188,12 @@ int main(int argc, char **argv)
     int a = pow(10, atoi(experiments));
     while ((ret = read(fd, buf1, sizeof(buf1))) > 999)
     {
+        char *help;
+        long val = strtoul(buf1, &help, 10);
         printf("%i", ret);
         if (ret > 0)
         {
-            printf("[binsearch]%i, %i, %d\n", atoi(buf1), counter_p, a);
+            printf("[binsearch]%li, %i, %d\n", val, counter_p, a);
             counter_p++;
         }
     }
