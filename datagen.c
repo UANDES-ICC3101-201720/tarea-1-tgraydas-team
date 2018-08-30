@@ -147,7 +147,7 @@ int main(int argc, char **argv)
         if (rc == -1)
         {
             perror("[datagen] error reading.\n");
-            exit(-1);
+            //exit(-1);
         }
         else if (rc == 0)
         {

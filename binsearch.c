@@ -160,15 +160,14 @@ int main(int argc, char **argv)
     {
         re = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
     }
+    //char buf[100];
     char arr[20] = "BEGIN S";
     strcat(arr, experiments);
-    printf("[1]%s\n", experiments);
-    printf("[2]%s\n", arr);
     write(fd, arr, sizeof(arr));
     /*
-    while ((rc = read(fd, buf, sizeof(buf))) > 0)
+    while ((rc = read(STDIN_FILENO, buf, sizeof(buf))) > 0)
     {
-        if (write(fd, buf, sizeof(buf)) != rc)
+        if (write(STDIN_FILENO, buf, sizeof(buf)) != rc)
         {
             if (rc > 0)
             {
@@ -186,18 +185,16 @@ int main(int argc, char **argv)
     char buf1[1000];
     int counter_p = 0;
     int a = pow(10, atoi(experiments));
+    ret = read(fd, buf1, sizeof(buf1));
     while ((ret = read(fd, buf1, sizeof(buf1))) > 999)
     {
-        char *help;
-        long val = strtoul(buf1, &help, 10);
-        printf("%i", ret);
+        unsigned int val = (unsigned int)*buf1;
         if (ret > 0)
         {
-            printf("[binsearch]%li, %i, %d\n", val, counter_p, a);
+            printf("[binsearch]%u, %i, %d\n", val, counter_p, a);
             counter_p++;
         }
     }
-    write(fd, DATAGEN_END_CMD, sizeof(DATAGEN_END_CMD));
     for (int i = 0; i < max_threads; i++)
         pthread_create(&m_tid[i], NULL, parallel_binsearch, (void *)NULL);
 
