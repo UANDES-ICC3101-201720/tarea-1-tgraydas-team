@@ -23,23 +23,30 @@ int xx;
 int n = sizeof(arr);
 int max_threads;
 int c = 0;
-
+int position;
+int size;
 // TODO: implement
-int serial_binsearch(int arr[], int l, int r, int x)
+void serial_binsearch(unsigned int arr[], int l, int r, int x)
 {
-    if (r >= l)
+    int low, high, mid;
+
+    low = l;
+    high = r - 1;
+
+    while (low < high)
     {
-        int mid = l + (r - l) / 2;
+        mid = (low + high) / 2;
 
-        if (arr[mid] == x)
-            return mid;
-
-        if (arr[mid] > x)
-            return serial_binsearch(arr, l, mid - 1, x);
-
-        return serial_binsearch(arr, mid + 1, r, x);
+        if (x < mid)
+            high = mid - 1;
+        else if (x > mid)
+            low = mid + 1;
+        else
+        {
+            printf("[binsearch] Se enctontro el numero con valor %u\n", arr[mid]);
+            break;
+        }
     }
-    return -1;
 }
 
 // TODO: implement
@@ -77,8 +84,8 @@ int main(int argc, char **argv)
     /* TODO: move this time measurement to right before the execution of each binsearch algorithms
      * in your experiment code. It now stands here just for demonstrating time measurement. */
     clock_t cbegin = clock();
-    int max_threads = sysconf(_SC_NPROCESSORS_ONLN);
-    pthread_t m_tid[max_threads];
+    //int max_threads = sysconf(_SC_NPROCESSORS_ONLN);
+    //pthread_t m_tid[max_threads];
 
     printf("[binsearch] Starting up...\n");
 
@@ -86,7 +93,6 @@ int main(int argc, char **argv)
     printf("[binsearch] Number of cores available: '%ld'\n",
            sysconf(_SC_NPROCESSORS_ONLN));
 
-    int size = -1, position = -1;
     char experiments[3] = "";
     int option = 0;
     /* TODO: parse arguments with getopt */
@@ -97,11 +103,10 @@ int main(int argc, char **argv)
         case 'T':
 
             strcpy(experiments, optarg);
-            printf("[0]%s\n", optarg);
             continue;
         case 'E':
-
             size = atoi(optarg);
+            printf("%i\n", size);
             continue;
         case 'P':
 
@@ -112,7 +117,6 @@ int main(int argc, char **argv)
             exit(1);
         }
     }
-    size = size * atoi(experiments) * position;
     /* TODO: start datagen here as a child process. */
     pid_t i = fork();
     if (i == 0)
@@ -185,29 +189,31 @@ int main(int argc, char **argv)
     char buf1[1000];
     int counter_p = 0;
     int a = pow(10, atoi(experiments));
+    unsigned int values[a];
     ret = read(fd, buf1, sizeof(buf1));
     while ((ret = read(fd, buf1, sizeof(buf1))) > 999)
     {
-        unsigned int val = (unsigned int)*buf1;
         if (ret > 0)
         {
-            printf("[binsearch]%u, %i, %d\n", val, counter_p, a);
-            counter_p++;
+            for (int i = 0; i <= 1000; i++)
+            {
+                values[counter_p] = (unsigned int)buf1[i];
+                counter_p++;
+            }
         }
     }
+    write(fd, DATAGEN_END_CMD, sizeof(DATAGEN_END_CMD));
+    /*
     for (int i = 0; i < max_threads; i++)
         pthread_create(&m_tid[i], NULL, parallel_binsearch, (void *)NULL);
 
     for (int i = 0; i < max_threads; i++)
-        pthread_detach(m_tid[i]);
-    if (fnd)
+        pthread_detach(m_tid[i]);*/
+    for (int i = 0; i < size; i++)
     {
-        printf("se encontro %d \n", found);
+        serial_binsearch(values, 0, a, position);
     }
-    else
-    {
-        printf("no se encontro %d \n", xx);
-    }
+
     //serial_binsearch();
 
     /* Probe time elapsed. */
@@ -217,6 +223,5 @@ int main(int argc, char **argv)
     double time_elapsed = ((double)(cend - cbegin) / CLOCKS_PER_SEC) * 1000;
 
     printf("Time elapsed '%lf' [ms].\n", time_elapsed);
-
     exit(0);
 }

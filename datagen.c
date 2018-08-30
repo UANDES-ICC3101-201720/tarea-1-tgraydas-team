@@ -98,8 +98,6 @@ int main(int argc, char **argv)
             char cmd[6], sflag;
             int tvalue;
             int toks = sscanf(buf, "%s %c%d", cmd, &sflag, &tvalue);
-            fprintf(stderr, "%s", buf);
-            fprintf(stderr, "%s %s %d %d", cmd, &sflag, tvalue, toks);
             if (toks == 3 && strstr(cmd, "BEGIN") != NULL)
             {
                 printf("[datagen] Beginning value generation.\n");
@@ -112,7 +110,6 @@ int main(int argc, char **argv)
                 }
 
                 UINT *pvalues = generate_values(tvalue, sorted);
-                printf("%i\n", tvalue);
                 printf("[datagen] post value generation and sorting.\n");
 
                 size_t numvalues = 0;
