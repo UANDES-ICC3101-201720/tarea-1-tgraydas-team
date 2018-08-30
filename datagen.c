@@ -59,7 +59,7 @@ UINT *generate_values(UINT T, bool sorted)
 int main(int argc, char **argv)
 {
     struct sockaddr_un addr;
-    char buf[100];
+    char buf[1000];
     int fd, cl, rc;
 
     if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
                 }
 
                 UINT *pvalues = generate_values(tvalue, sorted);
-
+                printf("%i\n", tvalue);
                 printf("[datagen] post value generation and sorting.\n");
 
                 size_t numvalues = 0;
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
                     printf("[datagen] wrote '%lu' bytes to socket. '%d' remaining bytes.\n",
                            vwritten, remaining_values);
                 }
-
+                write(cl, DATAGEN_OK_RESPONSE, strlen(DATAGEN_OK_RESPONSE));
                 free(pvalues);
             }
             else if (strstr(cmd, DATAGEN_END_CMD) != NULL)

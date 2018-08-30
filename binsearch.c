@@ -14,64 +14,63 @@
 #include "const.h"
 #include "util.h"
 
-
-int arr[10]; 
+int arr[10];
 bool fnd = false;
 int found;
 int max;
 int min;
 int xx;
-int n = sizeof(arr); 
+int n = sizeof(arr);
 int max_threads;
 int c = 0;
 
 // TODO: implement
-int serial_binsearch(int arr[], int l, int r, int x) 
-{ 
-   if (r >= l) 
-   { 
-        int mid = l + (r - l)/2; 
-  
-        if (arr[mid] == x)   
-            return mid; 
-  
-        if (arr[mid] > x)  
-            return serial_binsearch(arr, l, mid-1, x); 
+int serial_binsearch(int arr[], int l, int r, int x)
+{
+    if (r >= l)
+    {
+        int mid = l + (r - l) / 2;
 
-        return serial_binsearch(arr, mid+1, r, x); 
-   } 
+        if (arr[mid] == x)
+            return mid;
+
+        if (arr[mid] > x)
+            return serial_binsearch(arr, l, mid - 1, x);
+
+        return serial_binsearch(arr, mid + 1, r, x);
+    }
     return -1;
 }
 
-
-
 // TODO: implement
-void* parallel_binsearch(void* arg)
+void *parallel_binsearch(void *arg)
 {
     c++;
-    int c_parts = n/max_threads;
-    min = (c-1)*c_parts;
-    max = c*c_parts;
-    while (max >= min && !fnd) 
-   { 
-        int mid = min + (max - min)/2; 
-  
-        if (arr[mid] == xx) {
+    int c_parts = n / max_threads;
+    min = (c - 1) * c_parts;
+    max = c * c_parts;
+    while (max >= min && !fnd)
+    {
+        int mid = min + (max - min) / 2;
+
+        if (arr[mid] == xx)
+        {
             found = arr[mid];
-            fnd = true; 
+            fnd = true;
             break;
-        }      
-  
-        if (arr[mid] > xx){
-            max = mid -1;
-        } 
-        else{
-            min = mid +1;
+        }
+
+        if (arr[mid] > xx)
+        {
+            max = mid - 1;
+        }
+        else
+        {
+            min = mid + 1;
         }
     }
     return NULL;
 }
-
 
 int main(int argc, char **argv)
 {
@@ -81,40 +80,39 @@ int main(int argc, char **argv)
     int max_threads = sysconf(_SC_NPROCESSORS_ONLN);
     pthread_t m_tid[max_threads];
 
-   
-
     printf("[binsearch] Starting up...\n");
 
     /* Get the number of CPU cores available */
     printf("[binsearch] Number of cores available: '%ld'\n",
            sysconf(_SC_NPROCESSORS_ONLN));
 
-    int size = -1, experiments = -1, position = -1;
+    int size = -1, position = -1;
+    char experiments[3] = "";
     int option = 0;
-     size = size*experiments*position;
     /* TODO: parse arguments with getopt */
-    while ((option = getopt(argc, argv,"T:E:P:")) != -1) {
-        switch (option) {
-            case 'T' : 
-                
-                experiments = atoi(optarg);
-                break;
-            case 'E' : 
-                
-                size = atoi(optarg); 
-                break;
-            case 'P' : 
-                
-                position = atoi(optarg);
-                break;
-            default: 
-                printf("Parameters wrong");
-                exit(1);
+    while ((option = getopt(argc, argv, "T:E:P:")) != -1)
+    {
+        switch (option)
+        {
+        case 'T':
+
+            strcpy(experiments, optarg);
+            printf("[0]%s\n", optarg);
+            continue;
+        case 'E':
+
+            size = atoi(optarg);
+            continue;
+        case 'P':
+
+            position = atoi(optarg);
+            continue;
+        default:
+            printf("Parameters wrong");
+            exit(1);
         }
     }
-
-
-
+    size = size * atoi(experiments) * position;
     /* TODO: start datagen here as a child process. */
     pid_t i = fork();
     if (i == 0)
@@ -137,7 +135,6 @@ int main(int argc, char **argv)
      * serial and parallel versions of binsearch.
      * ocupar read del socket para el arreglo del binsearch
      */
-    
 
     /* TODO: connect to datagen and ask for the necessary data in each experiment round.
      * Create a Unix domain socket with DSOCKET_PATH (see const.h).
@@ -147,8 +144,8 @@ int main(int argc, char **argv)
      * */
 
     struct sockaddr_un addr;
-    char buf[100];
-    int fd, rc;
+
+    int fd;
 
     if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
@@ -163,45 +160,53 @@ int main(int argc, char **argv)
     {
         re = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
     }
-
-    char *arr = {"BEGIN S5"};
+    char arr[20] = "BEGIN S";
+    strcat(arr, experiments);
+    printf("[1]%s\n", experiments);
+    printf("[2]%s\n", arr);
     write(fd, arr, sizeof(arr));
-    fprintf(stderr, "hola\n" );
-    while ((rc = read(STDIN_FILENO, buf, sizeof(buf))) > 0)
+    /*
+    while ((rc = read(fd, buf, sizeof(buf))) > 0)
     {
-        fprintf(stderr, "hola\n" );
-        if (write(fd, buf, rc) != rc)
+        if (write(fd, buf, sizeof(buf)) != rc)
         {
             if (rc > 0)
-                fprintf(stderr, "partial write");
+            {
+                fprintf(stderr, "partial write\n");
+            }
             else
             {
                 perror("write error");
                 exit(-1);
             }
         }
-
     }
-    fprintf(stderr, "hola\n" );
+    fprintf(stderr, "hola\n");*/
     int ret;
     char buf1[1000];
-    while ((ret = read(fd, buf1, sizeof(buf1))) > 0) {
+    int counter_p = 0;
+    int a = pow(10, atoi(experiments));
+    while ((ret = read(fd, buf1, sizeof(buf1))) > 999)
+    {
+        printf("%i", ret);
         if (ret > 0)
         {
-            printf("%s\n",buf1 );
+            printf("[binsearch]%i, %i, %d\n", atoi(buf1), counter_p, a);
+            counter_p++;
         }
-        
     }
-
-     for (int i = 0; i < max_threads; i++)
-        pthread_create(&m_tid[i], NULL, parallel_binsearch, (void*)NULL);
+    write(fd, DATAGEN_END_CMD, sizeof(DATAGEN_END_CMD));
+    for (int i = 0; i < max_threads; i++)
+        pthread_create(&m_tid[i], NULL, parallel_binsearch, (void *)NULL);
 
     for (int i = 0; i < max_threads; i++)
         pthread_detach(m_tid[i]);
-    if (fnd) {
+    if (fnd)
+    {
         printf("se encontro %d \n", found);
     }
-    else {
+    else
+    {
         printf("no se encontro %d \n", xx);
     }
     //serial_binsearch();
