@@ -178,30 +178,22 @@ int main(int argc, char **argv)
     {
         re = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
     }
-    //char buf[100];
     char arr[20] = "BEGIN S";
     strcat(arr, experiments);
     if (write(fd, arr, sizeof(arr)) == -1)
     {
         printf("Error al iniciar el datagen\n");
     }
-    int ret;
-    char buf1[1000];
-    int counter_p = 0;
-    int a = pow(10, atoi(experiments));
-    unsigned int values[a];
-    ret = read(fd, buf1, sizeof(buf1));
-    while ((ret = read(fd, buf1, sizeof(buf1))) > 999)
+    long unsigned int readvalues = 0;
+    size_t numvalues = pow(10, atoi(experiments));
+    size_t readbytes = 0;
+    UINT *readbuf = malloc(sizeof(UINT) * numvalues);
+    while (readvalues < numvalues)
     {
-        if (ret > 0)
-        {
-            for (int i = 0; i <= 1000; i++)
-            {
-                values[counter_p] = (unsigned int)buf1[i];
-                counter_p++;
-            }
-        }
+        readbytes = read(fd, readbuf + readvalues, sizeof(UINT) * 1000);
+        readvalues += readbytes / 4;
     }
+
     if (write(fd, DATAGEN_END_CMD, sizeof(DATAGEN_END_CMD)) == -1)
     {
         printf("Error al terminar datagen\n");
@@ -212,23 +204,18 @@ int main(int argc, char **argv)
     for (int i = 0; i < size; i++)
     {
         clock_gettime(CLOCK_MONOTONIC, &start);
-        serial_binsearch(values, 0, a, position);
+        serial_binsearch(readbuf, 0, numvalues, position);
         clock_gettime(CLOCK_MONOTONIC, &finish);
         elapsed = (finish.tv_sec - start.tv_sec);
         elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
         clock_gettime(CLOCK_MONOTONIC, &start);
-        parallel_binsearch(values, 0, a, position);
+        parallel_binsearch(readbuf, 0, numvalues, position);
         clock_gettime(CLOCK_MONOTONIC, &finish);
         parallel_e = (finish.tv_sec - start.tv_sec);
         parallel_e += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
         printf("%i, %s, %lf, %lf\n", i, experiments, elapsed, parallel_e); // E, T, SERIAL_TIME, PARALEL_TIME
     }
 
-    //serial_binsearch();
-
-    /* Probe time elapsed. */
-
-    // Time elapsed in miliseconds.
-
+    free(readbuf);
     exit(0);
 }

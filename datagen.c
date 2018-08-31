@@ -94,7 +94,6 @@ int main(int argc, char **argv)
         }
         while ((rc = read(cl, buf, sizeof(buf))) > 0)
         {
-
             char cmd[6], sflag;
             int tvalue;
             int toks = sscanf(buf, "%s %c%d", cmd, &sflag, &tvalue);
@@ -126,7 +125,7 @@ int main(int argc, char **argv)
                     numvalues += vwritten;
                     remaining_values -= vwritten;
                     //printf("[datagen] wrote '%lu' bytes to socket. '%lu' remaining bytes.\n",
-                    //   vwritten, remaining_values);
+                    //       vwritten, remaining_values);
                 }
                 write(cl, DATAGEN_OK_RESPONSE, strlen(DATAGEN_OK_RESPONSE));
                 free(pvalues);
