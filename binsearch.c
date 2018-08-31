@@ -1,22 +1,26 @@
+
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
-#include <math.h>
 #include <unistd.h>
+#include <limits.h>
+#include <math.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <sys/un.h>
 #include <stdbool.h>
 #include <string.h>
-#include <time.h>
 #include <getopt.h>
 #include <pthread.h>
 #include "types.h"
 #include "const.h"
 #include "util.h"
 
+int finish = 0;
 int arr[10];
 bool fnd = false;
 int found;
+int job_waiting = 0;
 int max;
 int min;
 int xx;
@@ -25,7 +29,17 @@ int max_threads;
 int c = 0;
 int position;
 int size;
+
 // TODO: implement
+
+typedef struct
+{
+    unsigned int *arr;
+    int l;
+    int r;
+    int x;
+} data;
+
 void serial_binsearch(unsigned int arr[], int l, int r, int x)
 {
     int low, high, mid;
@@ -43,59 +57,60 @@ void serial_binsearch(unsigned int arr[], int l, int r, int x)
             low = mid + 1;
         else
         {
-            printf("[binsearch] Se enctontro el numero con valor %u\n", arr[mid]);
             break;
         }
     }
 }
-
-// TODO: implement
-void *parallel_binsearch(void *arg)
+void *binsearch(void *args)
 {
-    c++;
-    int c_parts = n / max_threads;
-    min = (c - 1) * c_parts;
-    max = c * c_parts;
-    while (max >= min && !fnd)
+    data *info = args;
+    int low, high, mid, x;
+    x = info->x;
+    low = info->l;
+    high = info->r - 1;
+    job_waiting++;
+    while (low < high && !finish)
     {
-        int mid = min + (max - min) / 2;
-
-        if (arr[mid] == xx)
-        {
-            found = arr[mid];
-            fnd = true;
-            break;
-        }
-
-        if (arr[mid] > xx)
-        {
-            max = mid - 1;
-        }
+        mid = (low + high) / 2;
+        if (x < mid)
+            high = mid - 1;
+        else if (x > mid)
+            low = mid + 1;
         else
         {
-            min = mid + 1;
+            finish = 1;
+            pthread_exit(0);
         }
     }
-    return NULL;
+    return 0;
+}
+// TODO: implement
+void parallel_binsearch(unsigned int arr[], int l, int r, int x)
+{
+    int max_threads = sysconf(_SC_NPROCESSORS_ONLN);
+    pthread_t m_tid[max_threads];
+    int c_parts = r / max_threads;
+    int mult = 1;
+    for (int i = 0; i < max_threads; i++)
+    {
+        data *info = malloc(sizeof(data));
+        info->arr = arr;
+        info->l = l;
+        info->x = position;
+        info->r = (c_parts * mult) - 1;
+        if (pthread_create(&m_tid[i], NULL, (void *)binsearch, info))
+        {
+            free(info);
+        }
+        l = c_parts * mult;
+        mult++;
+    }
 }
 
 int main(int argc, char **argv)
 {
-    /* TODO: move this time measurement to right before the execution of each binsearch algorithms
-     * in your experiment code. It now stands here just for demonstrating time measurement. */
-    clock_t cbegin = clock();
-    //int max_threads = sysconf(_SC_NPROCESSORS_ONLN);
-    //pthread_t m_tid[max_threads];
-
-    printf("[binsearch] Starting up...\n");
-
-    /* Get the number of CPU cores available */
-    printf("[binsearch] Number of cores available: '%ld'\n",
-           sysconf(_SC_NPROCESSORS_ONLN));
-
-    char experiments[3] = "";
+    char experiments[2] = "";
     int option = 0;
-    /* TODO: parse arguments with getopt */
     while ((option = getopt(argc, argv, "T:E:P:")) != -1)
     {
         switch (option)
@@ -106,7 +121,6 @@ int main(int argc, char **argv)
             continue;
         case 'E':
             size = atoi(optarg);
-            printf("%i\n", size);
             continue;
         case 'P':
 
@@ -167,24 +181,10 @@ int main(int argc, char **argv)
     //char buf[100];
     char arr[20] = "BEGIN S";
     strcat(arr, experiments);
-    write(fd, arr, sizeof(arr));
-    /*
-    while ((rc = read(STDIN_FILENO, buf, sizeof(buf))) > 0)
+    if (write(fd, arr, sizeof(arr)) == -1)
     {
-        if (write(STDIN_FILENO, buf, sizeof(buf)) != rc)
-        {
-            if (rc > 0)
-            {
-                fprintf(stderr, "partial write\n");
-            }
-            else
-            {
-                perror("write error");
-                exit(-1);
-            }
-        }
+        printf("Error al iniciar el datagen\n");
     }
-    fprintf(stderr, "hola\n");*/
     int ret;
     char buf1[1000];
     int counter_p = 0;
@@ -202,26 +202,33 @@ int main(int argc, char **argv)
             }
         }
     }
-    write(fd, DATAGEN_END_CMD, sizeof(DATAGEN_END_CMD));
-    /*
-    for (int i = 0; i < max_threads; i++)
-        pthread_create(&m_tid[i], NULL, parallel_binsearch, (void *)NULL);
-
-    for (int i = 0; i < max_threads; i++)
-        pthread_detach(m_tid[i]);*/
+    if (write(fd, DATAGEN_END_CMD, sizeof(DATAGEN_END_CMD)) == -1)
+    {
+        printf("Error al terminar datagen\n");
+    }
+    struct timespec start, finish;
+    double elapsed = 0;
+    double parallel_e = 0;
     for (int i = 0; i < size; i++)
     {
+        clock_gettime(CLOCK_MONOTONIC, &start);
         serial_binsearch(values, 0, a, position);
+        clock_gettime(CLOCK_MONOTONIC, &finish);
+        elapsed = (finish.tv_sec - start.tv_sec);
+        elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        parallel_binsearch(values, 0, a, position);
+        clock_gettime(CLOCK_MONOTONIC, &finish);
+        parallel_e = (finish.tv_sec - start.tv_sec);
+        parallel_e += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+        printf("%i, %s, %lf, %lf\n", i, experiments, elapsed, parallel_e); // E, T, SERIAL_TIME, PARALEL_TIME
     }
 
     //serial_binsearch();
 
     /* Probe time elapsed. */
-    clock_t cend = clock();
 
     // Time elapsed in miliseconds.
-    double time_elapsed = ((double)(cend - cbegin) / CLOCKS_PER_SEC) * 1000;
 
-    printf("Time elapsed '%lf' [ms].\n", time_elapsed);
     exit(0);
 }

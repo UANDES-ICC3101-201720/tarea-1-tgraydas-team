@@ -1,13 +1,13 @@
 CC=gcc
-CFLAGS=-Wall -std=c11 -Werror
+CFLAGS=-Wall -Werror -pthread -lm
 
 all: binsearch datagen
 
 datagen: datagen.c 
-	$(CC) -o datagen datagen.c -lm $(CFLAGS)
+	$(CC) -o datagen datagen.c $(CFLAGS)
 
 binsearch: binsearch.c util.o
-	$(CC) -o binsearch binsearch.c util.o -lm -pthread $(CFLAGS)
+	$(CC) -o binsearch binsearch.c util.o $(CFLAGS)
 
 util.o:
 	$(CC) -c -o util.o util.c $(CFLAGS)

@@ -49,7 +49,7 @@ UINT *generate_values(UINT T, bool sorted)
 
     if (sorted)
     {
-        printf("[datagen] sorting values.\n");
+        //printf("[datagen] sorting values.\n");
         qsort(valuebuff, size, sizeof(UINT), cmpfunc);
     }
 
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
             int toks = sscanf(buf, "%s %c%d", cmd, &sflag, &tvalue);
             if (toks == 3 && strstr(cmd, "BEGIN") != NULL)
             {
-                printf("[datagen] Beginning value generation.\n");
+                //printf("[datagen] Beginning value generation.\n");
                 bool sorted = sflag == 'S';
 
                 if (tvalue < 3 || tvalue > 8)
@@ -108,32 +108,32 @@ int main(int argc, char **argv)
                     perror("[datagen] Invalid T value! Aborting.\n");
                     continue;
                 }
-
                 UINT *pvalues = generate_values(tvalue, sorted);
-                printf("[datagen] post value generation and sorting.\n");
+                //printf("[datagen] post value generation and sorting.\n");
 
                 size_t numvalues = 0;
-                int remaining_values = pow(10, tvalue);
-
+                size_t remaining_values = pow(10, tvalue);
                 write(cl, DATAGEN_OK_RESPONSE, strlen(DATAGEN_OK_RESPONSE));
-
-                printf("[datagen] wrote OK response to socket.\n");
-
+                //printf("[datagen] wrote OK response to socket.\n");
                 while (remaining_values > 0)
                 {
-                    size_t bwritten = write(cl, pvalues + numvalues, min(remaining_values, 1000) * sizeof(UINT));
-                    size_t vwritten = bwritten / sizeof(UINT);
+                    long int bwritten = write(cl, pvalues + numvalues, min(remaining_values, 1000) * sizeof(UINT));
+                    long int vwritten = bwritten / sizeof(UINT);
+                    if (vwritten > remaining_values && remaining_values != 0)
+                    {
+                        break;
+                    }
                     numvalues += vwritten;
                     remaining_values -= vwritten;
-                    printf("[datagen] wrote '%lu' bytes to socket. '%d' remaining bytes.\n",
-                           vwritten, remaining_values);
+                    //printf("[datagen] wrote '%lu' bytes to socket. '%lu' remaining bytes.\n",
+                    //   vwritten, remaining_values);
                 }
                 write(cl, DATAGEN_OK_RESPONSE, strlen(DATAGEN_OK_RESPONSE));
                 free(pvalues);
             }
             else if (strstr(cmd, DATAGEN_END_CMD) != NULL)
             {
-                printf("[datagen] Now exiting.\n");
+                //printf("[datagen] Now exiting.\n");
                 exit(0);
             }
             else
