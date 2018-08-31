@@ -1,0 +1,16 @@
+
+ALGORITMO PARALLEL BINSEARCH:
+el algoritmo que se uso en la tarea consistio en dividir el arreglo en partes iguales dependiendo la cantidad de nucleos que tuviese el hardware. despues utilizamos la misma cantidad de threads que los nucleos que se pueden usar y dentro de cada thread llamaos la funcion serial, pero con un pedazo del arreglo original.
+pseudo-codigo parallel
+parallel_binsearch(arr[], min, max, posicion)
+    max_threads
+    arr_threads[max_threads]
+    c_parts = max / max_threads
+    mult = 1
+    for (int i = 0; i < max_threads; i++)  
+        if (thread_create(binsearch(arr[],min, max, posicion))
+            continue
+        l = c_parts * mult
+        mult++
+
+para esto necesitamos la funcion serial
