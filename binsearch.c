@@ -16,7 +16,7 @@
 #include "const.h"
 #include "util.h"
 
-int finish = 0;
+int finish;
 int arr[10];
 bool fnd = false;
 int found;
@@ -69,6 +69,7 @@ void *binsearch(void *args)
     low = info->l;
     high = info->r - 1;
     job_waiting++;
+    finish = 0;
     while (low < high && !finish)
     {
         mid = (low + high) / 2;
