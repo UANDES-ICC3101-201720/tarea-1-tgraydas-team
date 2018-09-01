@@ -79,6 +79,7 @@ ANALISIS DE RESULTADOS:
 ![alt text](./files/Figure_1-8.png)
 
 Como se puede ver en los graficos el binserach serial se demora menos que el parallel binsearch, esto se debe a los context switch, ya que al cambiar de thread se necesita realizar una serie de instrucciones para poder empezar a trabajar y esto, claramente toma tiempo de nuestra preciada CPU.
+
 En conclución, aunque el paralelismo puede ser muy útil implementarlo, no siempre es bueno usarlo.
 
 PROBLEMAS ENCONTRADOS Y LIMIATICIONES:
