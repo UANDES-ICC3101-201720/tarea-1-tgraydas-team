@@ -175,9 +175,9 @@ int main(int argc, char **argv)
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, DSOCKET_PATH, sizeof(addr.sun_path));
     int re = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
-    while (re == -1)
+    if (re == -1)
     {
-        re = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
+        perror("error al conectar con el socket");
     }
     char arr[20] = "BEGIN S";
     strcat(arr, experiments);
