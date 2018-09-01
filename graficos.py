@@ -27,11 +27,11 @@ def read_and_load_graph(file, title):
         parallel += float(arr[3])*1000
     serial = serial/100
     parallel = parallel/100
-    plt.ylabel('T (10^T valores en el experimento)')
-    plt.xlabel('Time (ms)')
-    plt.axis([-0.25, 2, 0, 9])
-    plt.plot(serial_l, exp_l, "r^--", label="Serial Time")
-    plt.plot(parallel_l, exp_l, "bs-", label="Parallel Time")
+    plt.xlabel('T (10^T valores en el experimento)')
+    plt.ylabel('Time (ms)')
+    plt.axis([0, 9, -0.25, 2])
+    plt.plot(exp_l, serial_l, "r^--", label="Serial Time")
+    plt.plot(exp_l, parallel_l, "bs-", label="Parallel Time")
     plt.title(title)
     plt.legend()
     plt.show()
