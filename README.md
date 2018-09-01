@@ -44,39 +44,39 @@ ANALISIS DE RESULTADOS:
 
 1.Grafico T4 P300 E100
 
-![alt text](./Figure_1.png)
+![alt text](./files/Figure_1.png)
 
 2.Grafico T4 P4930 E100
 
-![alt text](./Figure_1-1.png)
+![alt text](./files/Figure_1-1.png)
 
 3.Grafico T4 P9930 E 100
 
-![alt text](./Figure_1-2.png)
+![alt text](./files/Figure_1-2.png)
 
 4.Grafico T6 P30 E100
 
-![alt text](./Figure_1-3.png)
+![alt text](./files/Figure_1-3.png)
 
 5.Grafico T6 P4950030 E100
 
-![alt text](./Figure_1-4.png)
+![alt text](./files/Figure_1-4.png)
 
 6.Grafico T6 P9863000 E100
 
-![alt text](./Figure_1-5.png)
+![alt text](./files/Figure_1-5.png)
 
 7.Grafico T8 P10 E100
 
-![alt text](./Figure_1-6.png)
+![alt text](./files/Figure_1-6.png)
 
 8.Grafico T8 P40000000 E100
 
-![alt text](./Figure_1-7.png)
+![alt text](./files/Figure_1-7.png)
 
 9.Grafico T8 P90000000 E100
 
-![alt text](./Figure_1-8.png)
+![alt text](./files/Figure_1-8.png)
 
 Como se puede ver en los graficos el binserach serial se demora menos que el parallel binsearch, esto se debe a los context switch, ya que al cambiar de thread se necesita realizar una serie de instrucciones para poder empezar a trabajar y esto, claramente toma tiempo de nuestra preciada CPU.
 En conclución, aunque el paralelismo puede ser muy útil implementarlo, no siempre es bueno usarlo.
