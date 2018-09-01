@@ -102,7 +102,7 @@ int main(int argc, char **argv)
                 //printf("[datagen] Beginning value generation.\n");
                 bool sorted = sflag == 'S';
 
-                if (tvalue < 3 || tvalue > 8)
+                if (tvalue < 3 || tvalue > 9)
                 {
                     perror("[datagen] Invalid T value! Aborting.\n");
                     continue;
@@ -118,10 +118,6 @@ int main(int argc, char **argv)
                 {
                     long int bwritten = write(cl, pvalues + numvalues, min(remaining_values, 1000) * sizeof(UINT));
                     long int vwritten = bwritten / sizeof(UINT);
-                    if (vwritten > remaining_values && remaining_values != 0)
-                    {
-                        break;
-                    }
                     numvalues += vwritten;
                     remaining_values -= vwritten;
                     //printf("[datagen] wrote '%lu' bytes to socket. '%lu' remaining bytes.\n",
